@@ -1,4 +1,4 @@
-package project_pert_cpm.core.entites;
+package core.entites;
 
 public class Task {
 }

@@ -1,4 +1,4 @@
-package project_pert_cpm.core.exceptions;
+package core.exceptions;
 
 public class CyclicDependencyException {
 }

@@ -1,4 +1,12 @@
-package project_pert_cpm.data_structures.interfaces;
+package data_structures.interfaces;
 
-public class List {
+public interface List<T> {
+    void add(T item);
+    T get(int index);
+    void set(int index, T item);
+    void remove(int index);
+    int size();
+    boolean isEmpty();
+    void clear();
+    boolean contains(T item);
 }

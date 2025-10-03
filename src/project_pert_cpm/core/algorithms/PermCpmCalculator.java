@@ -1,4 +1,4 @@
-package project_pert_cpm.core.algorithms;
+package core.algorithms;
 
 public class PermCpmCalculator {
 }

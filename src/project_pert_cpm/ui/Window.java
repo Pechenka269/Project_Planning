@@ -1,4 +1,4 @@
-package project_pert_cpm.ui;
+package ui;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
