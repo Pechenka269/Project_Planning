@@ -17,17 +17,13 @@ import java.util.Map;
 
 public class Window extends Application {
 
-    // Список проектов для главного окна
     private ObservableList<VBox> projectItems = FXCollections.observableArrayList();
     private VBox projectsContainer;
 
-    // Хранилище объектов проектов: название проекта -> объект Project
     private Map<String, Project> projectsData = new HashMap<>();
 
-    // Текущий редактируемый проект (для окна добавления задач)
     private String currentEditingProject = "";
 
-    // Класс для хранения данных проекта
     public static class Project {
         public String name;
         public String description;
@@ -49,7 +45,6 @@ public class Window extends Application {
         Label titleLabel = new Label("Мои проекты");
         titleLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        // Контейнер для проектов
         projectsContainer = new VBox(10);
         projectsContainer.setPadding(new Insets(10));
 
@@ -92,8 +87,8 @@ public class Window extends Application {
         priorityCombo.getItems().addAll("Высокий", "Средний", "Низкий");
         priorityCombo.setValue("Средний");
 
-        // Кнопка "Добавить задачу"
-        Button addTaskButton = new Button("📝 Добавить задачу");
+
+        Button addTaskButton = new Button(" Добавить задачу");
         addTaskButton.setOnAction(e -> {
             if (nameField.getText().trim().isEmpty()) {
                 showAlert("Сначала введите название проекта!");
@@ -103,7 +98,6 @@ public class Window extends Application {
             openAddTaskWindow();
         });
 
-        // Кнопки сохранения/отмены
         Button saveButton = new Button("Сохранить проект");
         Button cancelButton = new Button("Отмена");
 
@@ -191,37 +185,32 @@ public class Window extends Application {
 
     private void saveProject(String name, String description,
                              LocalDate deadline, String priority) {
-        // Создаем объект проекта
+
         Project project = new Project(name, description, deadline, priority);
         projectsData.put(name, project);
 
-        // Создаем элемент проекта для отображения
+
         createProjectItem(project);
 
         showAlert("Проект '" + name + "' успешно добавлен!");
     }
 
     private void createProjectItem(Project project) {
-        // Основная строка проекта
         HBox projectHeader = new HBox(10);
         projectHeader.setAlignment(Pos.CENTER_LEFT);
         projectHeader.setStyle("-fx-padding: 10; -fx-border-color: #ddd; -fx-border-radius: 5; -fx-background-color: #f9f9f9;");
 
-        // Информация о проекте
         Label projectInfo = new Label();
         updateProjectInfoLabel(projectInfo, project);
         projectInfo.setStyle("-fx-font-weight: bold;");
 
-        // Кнопка "Развернуть задачи"
         ToggleButton expandButton = new ToggleButton("▼");
         expandButton.setStyle("-fx-font-size: 10px; -fx-padding: 2 5 2 5;");
 
-        // Кнопка "Добавить связи"
         Button addRelationsButton = new Button("🔗 Связи");
         addRelationsButton.setStyle("-fx-font-size: 12px; -fx-padding: 5 10 5 10;");
         addRelationsButton.setOnAction(e -> showRelationsMessage(project.name));
 
-        // Кнопка "Добавить задачу"
         Button addTaskButton = new Button("➕ Задача");
         addTaskButton.setStyle("-fx-font-size: 12px; -fx-padding: 5 10 5 10;");
         addTaskButton.setOnAction(e -> {
@@ -231,20 +220,17 @@ public class Window extends Application {
 
         projectHeader.getChildren().addAll(expandButton, projectInfo, addTaskButton, addRelationsButton);
 
-        // Контейнер для задач (скрыт по умолчанию)
         VBox tasksContainer = new VBox(5);
         tasksContainer.setStyle("-fx-padding: 10 10 10 30; -fx-background-color: #f0f0f0;");
         tasksContainer.setVisible(false);
         tasksContainer.setManaged(false);
 
-        // ListView для задач
         ListView<String> tasksListView = new ListView<>(project.tasks);
         tasksListView.setPrefHeight(150);
         tasksListView.setStyle("-fx-border-color: #ccc; -fx-border-radius: 3;");
 
         tasksContainer.getChildren().add(tasksListView);
 
-        // Обработка кнопки развернуть/свернуть
         expandButton.selectedProperty().addListener((obs, oldVal, newVal) -> {
             if (newVal) {
                 tasksContainer.setVisible(true);
@@ -257,12 +243,10 @@ public class Window extends Application {
             }
         });
 
-        // Основной контейнер проекта
         VBox projectItem = new VBox();
         projectItem.setStyle("-fx-border-color: #ccc; -fx-border-radius: 5; -fx-background-color: white;");
         projectItem.getChildren().addAll(projectHeader, tasksContainer);
 
-        // Добавляем в общий контейнер
         projectsContainer.getChildren().add(projectItem);
     }
 
@@ -279,17 +263,14 @@ public class Window extends Application {
     private void saveTask(String taskName, String description, LocalDate deadline) {
         Project project = projectsData.get(currentEditingProject);
         if (project != null) {
-            // Форматируем информацию о задаче
             String taskInfo = String.format("✅ %s | 📅 %s | %s",
                     taskName,
                     deadline != null ? deadline.toString() : "Без дедлайна",
                     description.isEmpty() ? "Без описания" : description
             );
 
-            // Добавляем задачу в проект
             project.tasks.add(taskInfo);
 
-            // Обновляем отображение проекта
             updateProjectDisplay(currentEditingProject);
 
             showAlert("Задача '" + taskName + "' добавлена в проект '" + currentEditingProject + "'!");
@@ -297,12 +278,10 @@ public class Window extends Application {
     }
 
     private void updateProjectDisplay(String projectName) {
-        // Находим и обновляем соответствующий элемент проекта
         for (int i = 0; i < projectsContainer.getChildren().size(); i++) {
             VBox projectItem = (VBox) projectsContainer.getChildren().get(i);
             HBox projectHeader = (HBox) projectItem.getChildren().get(0);
 
-            // Ищем Label с информацией о проекте
             for (var node : projectHeader.getChildren()) {
                 if (node instanceof Label) {
                     Label infoLabel = (Label) node;
