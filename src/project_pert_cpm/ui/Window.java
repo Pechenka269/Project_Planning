@@ -17,11 +17,9 @@ import java.util.Map;
 
 public class Window extends Application {
 
-    private ObservableList<VBox> projectItems = FXCollections.observableArrayList();
+    private ObservableList<ProjectItem> projectItems = FXCollections.observableArrayList();
     private VBox projectsContainer;
-
     private Map<String, Project> projectsData = new HashMap<>();
-
     private String currentEditingProject = "";
 
     public static class Project {
@@ -29,7 +27,7 @@ public class Window extends Application {
         public String description;
         public LocalDate deadline;
         public String priority;
-        public ObservableList<String> tasks;
+        public ObservableList<Task> tasks;
 
         public Project(String name, String description, LocalDate deadline, String priority) {
             this.name = name;
@@ -37,6 +35,43 @@ public class Window extends Application {
             this.deadline = deadline;
             this.priority = priority;
             this.tasks = FXCollections.observableArrayList();
+        }
+    }
+
+    public static class Task {
+        public String name;
+        public String description;
+        public LocalDate deadline;
+
+        public Task(String name, String description, LocalDate deadline) {
+            this.name = name;
+            this.description = description;
+            this.deadline = deadline;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("✅ %s | 📅 %s | %s",
+                    name,
+                    deadline != null ? deadline.toString() : "Без дедлайна",
+                    description.isEmpty() ? "Без описания" : description
+            );
+        }
+    }
+
+    private static class ProjectItem {
+        public VBox container;
+        public HBox header;
+        public Label infoLabel;
+        public VBox tasksContainer;
+        public ListView<String> tasksListView;
+
+        public ProjectItem(VBox container, HBox header, Label infoLabel, VBox tasksContainer, ListView<String> tasksListView) {
+            this.container = container;
+            this.header = header;
+            this.infoLabel = infoLabel;
+            this.tasksContainer = tasksContainer;
+            this.tasksListView = tasksListView;
         }
     }
 
@@ -51,19 +86,67 @@ public class Window extends Application {
         ScrollPane scrollPane = new ScrollPane(projectsContainer);
         scrollPane.setFitToWidth(true);
         scrollPane.setPrefHeight(400);
+// демо кнопка для демки на атту
+        Button demoButton = new Button("🚀 Демо-режим");
+        demoButton.setStyle("-fx-font-size: 14px; -fx-padding: 10px; -fx-background-color: #4CAF50; -fx-text-fill: white;");
+        demoButton.setOnAction(e -> showDemoData());
 
         Button addProjectButton = new Button("➕ Добавить проект");
         addProjectButton.setStyle("-fx-font-size: 14px; -fx-padding: 10px;");
         addProjectButton.setOnAction(e -> openAddProjectWindow());
 
+        HBox buttonsBox = new HBox(10, demoButton, addProjectButton);
+        buttonsBox.setAlignment(Pos.CENTER_LEFT);
+
         VBox mainLayout = new VBox(10);
         mainLayout.setPadding(new Insets(15));
-        mainLayout.getChildren().addAll(titleLabel, scrollPane, addProjectButton);
+        mainLayout.getChildren().addAll(titleLabel, buttonsBox, scrollPane);
 
         Scene scene = new Scene(mainLayout, 700, 600);
         primaryStage.setTitle("Планировщик проектов");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private void showDemoData() {
+        projectsData.clear();
+        projectsContainer.getChildren().clear();
+        projectItems.clear();
+
+        Project demoProject = new Project(
+                "Разработка мобильного приложения",
+                "Создание приложения для планирования задач",
+                LocalDate.now().plusDays(30),
+                "Высокий"
+        );
+//демо задачи
+        demoProject.tasks.add(new Task("Дизайн интерфейса", "Создание UI/UX дизайна", LocalDate.now().plusDays(5)));
+        demoProject.tasks.add(new Task("Разработка backend", "Реализация серверной части", LocalDate.now().plusDays(15)));
+        demoProject.tasks.add(new Task("Тестирование", "Функциональное тестирование", LocalDate.now().plusDays(25)));
+
+
+        projectsData.put(demoProject.name, demoProject);
+        createProjectItem(demoProject);
+
+        showCriticalPathAnalysis();
+    }
+
+    private void showCriticalPathAnalysis() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("📊 Демо-анализ проекта");
+        alert.setHeaderText("Результаты расчета критического пути");
+        alert.setContentText(
+                "Проект: 'Разработка мобильного приложения'\n\n" +
+                        "📈 PERT-анализ:\n" +
+                        "• Ожидаемая длительность: 45 дней\n" +
+                        "• Вероятность уложиться в срок: 85%\n\n" +
+                        "🛠️ CPM-анализ:\n" +
+                        "• Критический путь: Дизайн → Разработка → Тестирование \n" +
+                        "• Общая длительность: 40 дней\n" +
+                        "• Критические задачи: Все задачи находятся на критическом пути\n\n" +
+                        "💡 Вывод: Проект хорошо спланирован, все задачи критически важны!"
+        );
+        alert.showAndWait();
     }
 
     private void openAddProjectWindow() {
@@ -87,14 +170,14 @@ public class Window extends Application {
         priorityCombo.getItems().addAll("Высокий", "Средний", "Низкий");
         priorityCombo.setValue("Средний");
 
-
-        Button addTaskButton = new Button(" Добавить задачу");
+        Button addTaskButton = new Button("📝 Добавить задачу");
         addTaskButton.setOnAction(e -> {
-            if (nameField.getText().trim().isEmpty()) {
+            String projectName = nameField.getText().trim();
+            if (projectName.isEmpty()) {
                 showAlert("Сначала введите название проекта!");
                 return;
             }
-            currentEditingProject = nameField.getText().trim();
+            currentEditingProject = projectName;
             openAddTaskWindow();
         });
 
@@ -108,8 +191,17 @@ public class Window extends Application {
                 return;
             }
 
-            saveProject(projectName, descArea.getText(),
-                    deadlinePicker.getValue(), priorityCombo.getValue());
+            if (!projectsData.containsKey(projectName)) {
+                saveProject(projectName, descArea.getText(),
+                        deadlinePicker.getValue(), priorityCombo.getValue());
+            } else {
+                Project project = projectsData.get(projectName);
+                project.description = descArea.getText();
+                project.deadline = deadlinePicker.getValue();
+                project.priority = priorityCombo.getValue();
+                updateProjectDisplay(projectName);
+            }
+
             addProjectStage.close();
         });
 
@@ -135,6 +227,11 @@ public class Window extends Application {
     }
 
     private void openAddTaskWindow() {
+        if (currentEditingProject.isEmpty()) {
+            showAlert("Сначала создайте или выберите проект!");
+            return;
+        }
+
         Stage addTaskStage = new Stage();
         addTaskStage.setTitle("Добавить задачу в проект: " + currentEditingProject);
 
@@ -183,15 +280,10 @@ public class Window extends Application {
         addTaskStage.show();
     }
 
-    private void saveProject(String name, String description,
-                             LocalDate deadline, String priority) {
-
+    private void saveProject(String name, String description, LocalDate deadline, String priority) {
         Project project = new Project(name, description, deadline, priority);
         projectsData.put(name, project);
-
-
         createProjectItem(project);
-
         showAlert("Проект '" + name + "' успешно добавлен!");
     }
 
@@ -225,7 +317,12 @@ public class Window extends Application {
         tasksContainer.setVisible(false);
         tasksContainer.setManaged(false);
 
-        ListView<String> tasksListView = new ListView<>(project.tasks);
+        ObservableList<String> taskStrings = FXCollections.observableArrayList();
+        for (Task task : project.tasks) {
+            taskStrings.add(task.toString());
+        }
+
+        ListView<String> tasksListView = new ListView<>(taskStrings);
         tasksListView.setPrefHeight(150);
         tasksListView.setStyle("-fx-border-color: #ccc; -fx-border-radius: 3;");
 
@@ -248,6 +345,8 @@ public class Window extends Application {
         projectItem.getChildren().addAll(projectHeader, tasksContainer);
 
         projectsContainer.getChildren().add(projectItem);
+
+        projectItems.add(new ProjectItem(projectItem, projectHeader, projectInfo, tasksContainer, tasksListView));
     }
 
     private void updateProjectInfoLabel(Label label, Project project) {
@@ -263,36 +362,29 @@ public class Window extends Application {
     private void saveTask(String taskName, String description, LocalDate deadline) {
         Project project = projectsData.get(currentEditingProject);
         if (project != null) {
-            String taskInfo = String.format("✅ %s | 📅 %s | %s",
-                    taskName,
-                    deadline != null ? deadline.toString() : "Без дедлайна",
-                    description.isEmpty() ? "Без описания" : description
-            );
-
-            project.tasks.add(taskInfo);
-
+            Task newTask = new Task(taskName, description, deadline);
+            project.tasks.add(newTask);
             updateProjectDisplay(currentEditingProject);
-
             showAlert("Задача '" + taskName + "' добавлена в проект '" + currentEditingProject + "'!");
+        } else {
+            showAlert("Ошибка: проект не найден!");
         }
     }
 
     private void updateProjectDisplay(String projectName) {
-        for (int i = 0; i < projectsContainer.getChildren().size(); i++) {
-            VBox projectItem = (VBox) projectsContainer.getChildren().get(i);
-            HBox projectHeader = (HBox) projectItem.getChildren().get(0);
+        Project project = projectsData.get(projectName);
+        if (project == null) return;
 
-            for (var node : projectHeader.getChildren()) {
-                if (node instanceof Label) {
-                    Label infoLabel = (Label) node;
-                    if (infoLabel.getText().contains("📋 " + projectName)) {
-                        Project project = projectsData.get(projectName);
-                        if (project != null) {
-                            updateProjectInfoLabel(infoLabel, project);
-                        }
-                        return;
-                    }
+        for (ProjectItem item : projectItems) {
+            if (item.infoLabel.getText().contains("📋 " + projectName)) {
+                updateProjectInfoLabel(item.infoLabel, project);
+
+                ObservableList<String> taskStrings = FXCollections.observableArrayList();
+                for (Task task : project.tasks) {
+                    taskStrings.add(task.toString());
                 }
+                item.tasksListView.setItems(taskStrings);
+                break;
             }
         }
     }
