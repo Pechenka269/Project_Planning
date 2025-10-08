@@ -1,6 +1,6 @@
 package core.entities;
 
-public class Task {
+public class Task implements Comparable<Task> {
     private final String id;
     private String name;
     private int duration;
@@ -20,7 +20,6 @@ public class Task {
         this.lateFinish = 0;
         this.slack = 0;
     }
-
 
     public String getId() {
         return id;
@@ -85,7 +84,7 @@ public class Task {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Task)) return false;
         Task task = (Task) o;
         return id.equals(task.id);
     }
@@ -96,7 +95,12 @@ public class Task {
     }
 
     @Override
+    public int compareTo(Task other) {
+        return Integer.compare(this.duration, other.duration);
+    }
+
+    @Override
     public String toString() {
-        return name;
+        return "Task[" + id + ": " + name + " (" + duration + " days)]";
     }
 }
