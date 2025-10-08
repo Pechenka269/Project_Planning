@@ -1,0 +1,11 @@
+package data_structures.interfaces;
+
+
+public interface Stack<T> {
+    void push(T item);
+    T pop();
+    T peek();
+    boolean isEmpty();
+    int size();
+    void clear();
+}
